@@ -285,26 +285,26 @@ CI_df %>% ggplot(aes(x = Time, y = Estimate)) +
 ## Supplementary Fig. 1a ----
 
 ranefDiagnostics(MDAMD231_lmm)$Plots[1]
-residDiagnostics(MDAMD231_lmm)$plots[1]
-residDiagnostics(MDAMD231_lmm)$plots[4]
+residDiagnostics(MDAMD231_lmm)$Plots[1]
+residDiagnostics(MDAMD231_lmm)$Plots[4]
 
 ## Supplementary Fig. 1b ----
 
 ranefDiagnostics(BV173Gluc_lmm)$Plots[1]
-residDiagnostics(BV173Gluc_lmm)$plots[1]
-residDiagnostics(BV173Gluc_lmm)$plots[4]
+residDiagnostics(BV173Gluc_lmm)$Plots[1]
+residDiagnostics(BV173Gluc_lmm)$Plots[4]
 
 ## Supplementary Fig. 1c ----
 
 ranefDiagnostics(CHL1FM_lmm)$Plots[1]
-residDiagnostics(CHL1FM_lmm)$plots[1]
-residDiagnostics(CHL1FM_lmm)$plots[4]
+residDiagnostics(CHL1FM_lmm)$Plots[1]
+residDiagnostics(CHL1FM_lmm)$Plots[4]
 
 ## Supplementary Fig. 1d ----
 
 ranefDiagnostics(U87MG_lmm)$Plots[1]
-residDiagnostics(U87MG_lmm)$plots[1]
-residDiagnostics(U87MG_lmm)$plots[4]
+residDiagnostics(U87MG_lmm)$Plots[1]
+residDiagnostics(U87MG_lmm)$Plots[4]
 
 # Supplementary Figure 2 ----
 
@@ -955,32 +955,32 @@ SNU81_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
 ## Supplementary Fig. 5a ----
 
 ranefDiagnostics(CR1197_lmm)$Plots[1]
-residDiagnostics(CR1197_lmm)$plots[1]
-residDiagnostics(CR1197_lmm)$plots[4]
+residDiagnostics(CR1197_lmm)$Plots[1]
+residDiagnostics(CR1197_lmm)$Plots[4]
 
 ## Supplementary Fig. 5b ----
 
 ranefDiagnostics(GABA_lmm)$Plots[1]
-residDiagnostics(GABA_lmm)$plots[1]
-residDiagnostics(GABA_lmm)$plots[4]
+residDiagnostics(GABA_lmm)$Plots[1]
+residDiagnostics(GABA_lmm)$Plots[4]
 
 ## Supplementary Fig. 5c ----
 
 ranefDiagnostics(SW837_lmm)$Plots[1]
-residDiagnostics(SW837_lmm)$plots[1]
-residDiagnostics(SW837_lmm)$plots[4]
+residDiagnostics(SW837_lmm)$Plots[1]
+residDiagnostics(SW837_lmm)$Plots[4]
 
 ## Supplementary Fig. 5d ----
 
 ranefDiagnostics(LS1034_lmm)$Plots[1]
-residDiagnostics(LS1034_lmm)$plots[1]
-residDiagnostics(LS1034_lmm)$plots[4]
+residDiagnostics(LS1034_lmm)$Plots[1]
+residDiagnostics(LS1034_lmm)$Plots[4]
 
 ## Supplementary Fig. 5e ----
 
 ranefDiagnostics(SNU81_lmm)$Plots[1]
-residDiagnostics(SNU81_lmm)$plots[1]
-residDiagnostics(SNU81_lmm)$plots[4]
+residDiagnostics(SNU81_lmm)$Plots[1]
+residDiagnostics(SNU81_lmm)$Plots[4]
 
 # Supplementary Figure 6 ----
 
@@ -1652,7 +1652,7 @@ SimData1_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
 
 MAS98.06 <- read.csv("data/Fig4/MAS98_06.csv")
 colnames(MAS98.06) <- c("Cell", "SampleID","Treatment", "TV","Time", "Figure")
-MAS98.06 <- .getRTV(MAS98.06, time_start = 0)
+MAS98.06 <- getRTV(MAS98.06, time_start = 0)
 
 MAS98.06$Treatment <- factor(MAS98.06$Treatment, levels = c("Ctrl", "Her", "EGF", "Fulv", "Trast", "Her_Fulv", "EGF_Fulv","Fulv_Trast","Her_Trast"))
 
@@ -1765,26 +1765,26 @@ cowplot::plot_grid(CI, SS)
 ## Supplementary Fig. 8a ----
 
 ranefDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_lmm)$plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_lmm)$plots[4]
+residDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[4]
 
 ## Supplementary Fig. 8b ----
 
 ranefDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[1]
-residDiagnostics(MAS98.06_EGF_Fulv_lmm)$plots[1]
-residDiagnostics(MAS98.06_EGF_Fulv_lmm)$plots[4]
+residDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[1]
+residDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[4]
 
 ## Supplementary Fig. 8c ----
 
 ranefDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Fulv_Trast_lmm)$plots[1]
-residDiagnostics(MAS98.06_Fulv_Trast_lmm)$plots[4]
+residDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[4]
 
 ## Supplementary Fig. 8d ----
 
 ranefDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Trast_lmm)$plots[1]
-residDiagnostics(MAS98.06_Her_Trast_lmm)$plots[4]
+residDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[4]
 
 
 # Supplementary Figure 9 ----
@@ -1900,8 +1900,8 @@ syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
 ## Supplementary Fig. 10a ----
 
 ranefDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$plots[4]
+residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[4]
 
 ## Supplementary Fig. 10b ----
 
@@ -1910,8 +1910,8 @@ ObsvsPred(MAS98.06_Her_Fulv_Trast_lmm, 5, 5)
 ## Supplementary Fig. 10c ----
 
 ranefDiagnostics(triple_lmm)$Plots[1]
-residDiagnostics(triple_lmm)$plots[1]
-residDiagnostics(triple_lmm)$plots[4]
+residDiagnostics(triple_lmm)$Plots[1]
+residDiagnostics(triple_lmm)$Plots[4]
 
 ## Supplementary Fig. 10d ----
 
@@ -2318,5 +2318,6 @@ PwrTime(npg = 10, time = list(seq(0,18,1), seq(0,18,2), seq(0,18,3), seq(0,18,6)
         grwrControl = 0.097, grwrA = 0.103, grwrB = -0.006, grwrComb = -0.037, sd_ranef = 0.028, sgma = 0.402,
         type = "freq")
 
+# Version information about R, the OS and attached or loaded packages. ----
 
-
+writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
