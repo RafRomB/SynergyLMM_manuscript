@@ -1,6 +1,6 @@
 # Code to reproduce the results shown in 'SynergyLMM: A comprehensive statistical framework and interactive web-tool for designing and analyzing in vivo drug combination experiments'
 
-# Libraries
+# Libraries ----
 
 library(SynergyLMM)
 library(tidyverse)
