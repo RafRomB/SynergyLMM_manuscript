@@ -356,12 +356,282 @@ df %>% ggplot(aes(x = Time, y = logRTV, group = SampleID)) + geom_point(aes(colo
   scale_x_continuous(breaks = unique(df$Time), labels = unique(df$Time)^2) +
   xlab("Days since treatment initiation")
 
-
 # Figure 3 ----
 
-## Fig. 3a ----
+## Fig. 3b ----
 
-CR1197 <- read.csv("data/Fig3/CR1197_sel_tv.csv")
+MAS98.06 <- read.csv("data/Fig3/MAS98_06.csv")
+colnames(MAS98.06) <- c("Cell", "SampleID","Treatment", "TV","Time", "Figure")
+MAS98.06 <- getRTV(MAS98.06, time_start = 0)
+
+MAS98.06$Treatment <- factor(MAS98.06$Treatment, levels = c("Ctrl", "Her", "EGF", "Fulv", "Trast", "Her_Fulv", "EGF_Fulv","Fulv_Trast","Her_Trast"))
+
+hline <- data.frame(yintercept = 0)
+
+MAS98.06 %>% ggplot(aes(x = Time, y = logRTV, color = Treatment)) +
+  geom_line(aes(group = SampleID), alpha = 0.33) + geom_point(aes(group = SampleID, shape = Treatment, fill = Treatment)) +
+  ylab("Log (RTV)") + 
+  xlab("Time since start of treatment") + 
+  scale_x_continuous(breaks = c(0,7,14,21,28)) + 
+  cowplot::theme_cowplot() + facet_wrap(~Treatment) +
+  labs(title = "MAS98.06") +
+  geom_hline(data = hline, aes(yintercept = yintercept), linetype = "dashed") +
+  scale_color_manual(values = c("#3c3c3b", "#00a49c", "#fc8d62","#d50c52","#8c510a","#601580","#e78ac3", "#01665e","#386cb0")) +
+  scale_fill_manual(values = c("#3c3c3b", "#00a49c", "#fc8d62","#d50c52","#8c510a","#601580","#e78ac3", "#01665e","#386cb0")) +
+  scale_shape_manual(values = c(21:25,21:24)) +
+  theme(strip.text = element_text(size = 18), legend.position = "top")
+
+## Fig. 3c ----
+
+MAS98.06_Her_Fulv <- read.xlsx("data/Fig3/MAS98.06_Her_Fulv.xlsx")
+MAS98.06_Her_Fulv$Mouse <- paste(MAS98.06_Her_Fulv$Treatment, " (",MAS98.06_Her_Fulv$Mouse,")", sep = "")
+MAS98.06_Her_Fulv <- MAS98.06_Her_Fulv[order(MAS98.06_Her_Fulv$Mouse),]
+
+MAS98.06_Her_Fulv_lmm <- lmmModel(data = MAS98.06_Her_Fulv, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
+                                  trt_control = "Ctrl", drug_a = "Fulv", drug_b = "Her", combination = "Her_Fulv", time_end = 28,
+                                  weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
+
+(Her_Fulv <- lmmSynergy(MAS98.06_Her_Fulv_lmm, robust = T, type = "CR2", min_time = 7, method = "HSA"))
+Her_Fulv <- Her_Fulv$Synergy
+Her_Fulv$Drug <- "Her_Fulv"
+
+MAS98.06_EGF_Fulv <- read.xlsx("data/Fig3/MAS98.06_EGF_Fulv.xlsx")
+MAS98.06_EGF_Fulv$Mouse <- paste(MAS98.06_EGF_Fulv$Treatment, " (",MAS98.06_EGF_Fulv$Mouse,")", sep = "")
+MAS98.06_EGF_Fulv <- MAS98.06_EGF_Fulv[order(MAS98.06_EGF_Fulv$Mouse),]
+
+
+MAS98.06_EGF_Fulv_lmm <- lmmModel(data = MAS98.06_EGF_Fulv, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
+                                  trt_control = "Ctrl", drug_a = "Fulv", drug_b = "EGF", combination = "EGF_Fulv", time_end = 28,
+                                  weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
+
+(EGF_Fulv <- lmmSynergy(MAS98.06_EGF_Fulv_lmm, robust = T, type = "CR2", min_time = 7, method = "HSA"))
+EGF_Fulv <- EGF_Fulv$Synergy
+
+EGF_Fulv$Drug <- "EGF_Fulv"
+
+MAS98.06_Fulv_Trast <- read.xlsx("data/Fig3/MAS98.06_Fulv_Trast.xlsx")
+MAS98.06_Fulv_Trast$Mouse <- paste(MAS98.06_Fulv_Trast$Treatment, " (",MAS98.06_Fulv_Trast$Mouse,")", sep = "")
+MAS98.06_Fulv_Trast <- MAS98.06_Fulv_Trast[order(MAS98.06_Fulv_Trast$Mouse),]
+
+MAS98.06_Fulv_Trast_lmm <- lmmModel(data = MAS98.06_Fulv_Trast, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
+                                    trt_control = "Ctrl", drug_a = "Fulv", drug_b = "Trast", combination = "Fulv_Trast", time_end = 28,
+                                    weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
+
+(Fulv_Trast <- lmmSynergy(MAS98.06_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "HSA"))
+Fulv_Trast <- Fulv_Trast$Synergy
+Fulv_Trast$Drug <- "Fulv_Trast"
+
+MAS98.06_Her_Trast <- read.xlsx("data/Fig3/MAS98.06_Her_Trast.xlsx")
+MAS98.06_Her_Trast$Sample <- paste(MAS98.06_Her_Trast$Treatment, " (",MAS98.06_Her_Trast$Sample,")", sep = "")
+MAS98.06_Her_Trast <- MAS98.06_Her_Trast[order(MAS98.06_Her_Trast$Sample),]
+
+MAS98.06_Her_Trast_lmm <- lmmModel(data = MAS98.06_Her_Trast, sample_id = "Sample", time = "Days", treatment = "Treatment", tumor_vol = "Total_vol",
+                                   trt_control = "Ctrl", drug_a = "Her", drug_b = "Trast", combination = "Her_Trast", time_start = 0, time_end = 28,
+                                   weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
+
+(Her_Trast <- lmmSynergy(MAS98.06_Her_Trast_lmm, robust = T, type = "CR2", min_time = 7, method = "HSA"))
+Her_Trast <- Her_Trast$Synergy
+Her_Trast$Drug <- "Her_Trast"
+
+HSA_Syn <- rbind(Her_Fulv, EGF_Fulv, Fulv_Trast, Her_Trast)
+
+HSA_Syn <- HSA_Syn[,-1]
+
+HSA_Syn <- HSA_Syn %>% filter(Time == 28)
+
+HSA_Syn$Drug <- factor(HSA_Syn$Drug, levels = unique(HSA_Syn$Drug))
+
+HSA_CI <- HSA_Syn %>% filter(Metric == "CI")
+HSA_SS <- HSA_Syn %>% filter(Metric == "SS")
+
+
+CI <- HSA_CI %>% ggplot(aes(x = Drug, y = Estimate, group = Drug)) +
+  geom_segment(aes(x= Drug, y = lwr, yend = upr), color = "gray60", lwd = 1, 
+               arrow = arrow(angle = 90, length = unit(0.01, "npc"),ends = "both")) +
+  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
+  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
+  geom_hline(yintercept = 1, lty = "dashed") +
+  xlab("Drugs") +
+  ylab("Combination Index") + 
+  theme_cowplot() +
+  labs(title = "Combination Index")
+
+
+SS <- HSA_SS %>% ggplot(aes(x = Drug, y = Estimate, group = Drug)) +
+  geom_segment(aes(x= Drug, y = lwr, yend = upr), color = "gray60", lwd = 1, 
+               arrow = arrow(angle = 90, length = unit(0.01, "npc"),ends = "both")) +
+  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
+  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
+  geom_hline(yintercept = 0, lty = "dashed") +
+  xlab("Drugs") +
+  ylab("Synergy Score") + 
+  theme_cowplot() +
+  labs(title = "Synergy Score")
+
+cowplot::plot_grid(CI, SS)
+
+# Supplementary Figure 4 ----
+
+## Supplementary Fig. 4a ----
+
+ranefDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[4]
+
+## Supplementary Fig. 4b ----
+
+ranefDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[1]
+residDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[1]
+residDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[4]
+
+## Supplementary Fig. 4c ----
+
+ranefDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[4]
+
+## Supplementary Fig. 4d ----
+
+ranefDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[4]
+
+
+# Supplementary Figure 5 ----
+
+## Supplementary Fig. 5a ----
+ObsvsPred(MAS98.06_Her_Fulv_lmm, 5, 5)
+
+## Supplementary Fig. 5b ----
+ObsvsPred(MAS98.06_EGF_Fulv_lmm, 4, 5)
+
+## Supplementary Fig. 5c ----
+ObsvsPred(MAS98.06_Fulv_Trast_lmm, 4, 5)
+
+## Supplementary Fig. 5d ----
+ObsvsPred(MAS98.06_Her_Trast_lmm, 4, 6)
+
+# Figure 4 ----
+
+## Fig. 4a ----
+
+MAS98.06_Her_Fulv_Trast <- read.xlsx("data/Fig4/MAS98.06_Her_Fulv_Trast.xlsx")
+MAS98.06_Her_Fulv_Trast$Sample <- paste(MAS98.06_Her_Fulv_Trast$Treatment, " (",MAS98.06_Her_Fulv_Trast$Sample,")", sep = "")
+MAS98.06_Her_Fulv_Trast <- MAS98.06_Her_Fulv_Trast[order(MAS98.06_Her_Fulv_Trast$Sample),]
+
+# Fit Model
+MAS98.06_Her_Fulv_Trast_lmm <- lmmModel(data = MAS98.06_Her_Fulv_Trast, sample_id = "Sample", time = "Days", treatment = "Treatment", tumor_vol = "Total_vol",
+                                        trt_control = "Ctrl", drug_a = "Her", drug_b = "Trast", drug_c = "Fulv", combination = "Her_Fulv_Trast", time_start = 0, time_end = 28,
+                                        weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
+
+trt_col <- c("#3c3c3b", "#00a49c", "#fc8d62","#d50c52","#8c510a","#601580","#e78ac3", "#01665e","#386cb0")
+
+plot_lmmModel(MAS98.06_Her_Fulv_Trast_lmm,   trt_control = "Ctrl", drug_a = "Her", drug_b = "Trast", drug_c = "Fulv", combination = "Her_Fulv_Trast") +
+  theme(legend.position = "top") +
+  labs(title = "MAS98.06 Heregulin - Fulvestrant - Trastuzumab") + scale_x_continuous(breaks = c(0,7,14,21,28)) +
+  ylab("log (Relative Tumor Volume)") +
+  scale_color_manual(values = c(trt_col[c(1,2,4,5)], "red3")) +
+  theme(strip.text = element_text(size = 18))
+
+## Fig. 4b ----
+
+(bliss <- lmmSynergy(MAS98.06_Her_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "Bliss"))
+
+(hsa <- lmmSynergy(MAS98.06_Her_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "HSA"))
+
+set.seed(123)
+(ra <- lmmSynergy(MAS98.06_Her_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "RA", ra_nsim = 1000))
+
+syn <- rbind(bliss$Synergy, hsa$Synergy, ra$Synergy)
+
+syn <- syn %>% filter(Metric == "SS" & Time %in% c(8,12, 16, 20, 24, 28))
+
+syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
+  geom_segment(aes(x= Time, y = lwr, yend = upr), color = "gray60", lwd = 1, 
+               arrow = arrow(angle = 90, length = unit(0.02, "npc"),ends = "both")) +
+  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
+  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
+  geom_hline(yintercept = 0, lty = "dashed") +
+  xlab("Days after Treatment Initiation") +
+  ylab("Synergy Score") + 
+  theme_cowplot() +
+  labs(title = "Synergy Score") + facet_wrap(~Model) +
+  scale_x_continuous(breaks = c(8,12, 16, 20, 24, 28)) +
+  theme(strip.background = element_rect(fill = "cyan4"), strip.text = element_text(color = "white", face = "bold", size = 18))
+
+## Fig. 4c ----
+
+triple <- read.csv("data/Fig4/U87MG_Triple_long.csv")
+
+triple$Day <- sqrt(triple$Day)
+
+# Fit model
+triple_lmm <- lmmModel(data = triple, sample_id = "MOUSE", time = "Day", treatment = "Treatment", tumor_vol = "RLU",
+                       trt_control = "None", drug_a = "AZD2014", drug_b = "Tagrisso", drug_c = "DOC",combination = "Triple",
+                       weights = nlme::varComb(nlme::varIdent(form = ~1|SampleID), varIdent(form = ~1|Time)))
+
+plot_lmmModel(triple_lmm, trt_control = "None", drug_a = "AZD2014", drug_b = "Tagrisso", drug_c = "DOC",combination = "Triple") +
+  theme(legend.position = "top") +
+  labs(title = "U87-MG-FM Tagrisso-AZD2014-DOC") +
+  scale_x_continuous(breaks = unique(triple_lmm$dt1$Time), labels = unique(triple_lmm$dt1$Time)^2) + ylab("log (RLU)") +
+  theme(strip.text = element_text(size = 18))
+
+## Fig. 4d ----
+
+(bliss <- lmmSynergy(triple_lmm, robust = T, type = "CR2", min_time = 3, method = "Bliss"))
+bliss$Synergy$Time <- bliss$Synergy$Time^2
+
+(hsa <- lmmSynergy(triple_lmm, robust = T, type = "CR2", min_time = 3, method = "HSA"))
+hsa$Synergy$Time <- hsa$Synergy$Time^2
+
+set.seed(123)
+(ra <- lmmSynergy(triple_lmm, robust = T, type = "CR2", min_time = 3, method = "RA", ra_nsim = 1000))
+ra$Synergy$Time <- ra$Synergy$Time^2
+
+syn <- rbind(bliss$Synergy, hsa$Synergy, ra$Synergy)
+
+syn <- syn %>% filter(Metric == "SS")
+
+syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
+  geom_segment(aes(x= Time, y = lwr, yend = upr), color = "gray60", lwd = 1, 
+               arrow = arrow(angle = 90, length = unit(0.02, "npc"),ends = "both")) +
+  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
+  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
+  geom_hline(yintercept = 0, lty = "dashed") +
+  xlab("Days after Treatment Initiation") +
+  ylab("Synergy Score") + 
+  theme_cowplot() +
+  labs(title = "Synergy Score") + facet_wrap(~Model) +
+  scale_x_continuous(breaks = unique(syn$Time)) +
+  theme(strip.background = element_rect(fill = "cyan4"), strip.text = element_text(color = "white", face = "bold", size = 18))
+
+# Supplementary Figure 6 ----
+
+## Supplementary Fig. 6a ----
+
+ranefDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[1]
+residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[4]
+
+## Supplementary Fig. 6b ----
+
+ObsvsPred(MAS98.06_Her_Fulv_Trast_lmm, 5, 5)
+
+## Supplementary Fig. 6c ----
+
+ranefDiagnostics(triple_lmm)$Plots[1]
+residDiagnostics(triple_lmm)$Plots[1]
+residDiagnostics(triple_lmm)$Plots[4]
+
+## Supplementary Fig. 6d ----
+
+ObsvsPred(triple_lmm, 6, 6)
+
+# Figure 5 ----
+
+## Fig. 5a ----
+
+CR1197 <- read.csv("data/Fig5/CR1197_sel_tv.csv")
 CR1197$Mice.ID <- paste(CR1197$Treatment, " (",CR1197$Mice.ID,")", sep = "")
 CR1197 <- CR1197[order(CR1197$Mice.ID),]
 
@@ -381,7 +651,7 @@ plot_lmmModel(CR1197_lmm, trt_control = "Vehicle", drug_a = "Cetuximab", drug_b 
   scale_x_continuous(breaks = unique(CR1197_lmm$dt1$Time), labels = unique(CR1197_lmm$dt1$Time)^2) + 
   theme(strip.text = element_text(size = 18), axis.text.x = element_text(angle = 45, hjust = 1))
 
-## Fig. 3b ----
+## Fig. 5b ----
 
 # Calculate Synergy
 
@@ -390,7 +660,7 @@ plot_lmmModel(CR1197_lmm, trt_control = "Vehicle", drug_a = "Cetuximab", drug_b 
 bliss$Synergy$Time <- bliss$Synergy$Time^2
 
 ## invivoSyn
-CR1197 <- read.csv("data/Fig3/CR1197_sel_tv.csv")
+CR1197 <- read.csv("data/Fig5/CR1197_sel_tv.csv")
 
 colnames(CR1197) <- c("Cell.line", "Mouse", "Treatment", "TV", "Day")
 
@@ -429,7 +699,7 @@ for (t in unique(CR1197$Day)) {
   }
 
 # The simulations can take a while to run. Load the results running the following line of code:
-CR1197_invivoSyn_bliss <- read.csv("data/Fig3/CR1197_invivoSyn_bliss_byT.csv")
+CR1197_invivoSyn_bliss <- read.csv("data/Fig5/CR1197_invivoSyn_bliss_byT.csv")
 
 CR1197_bliss <- bliss$Synergy %>% filter(Metric == "CI")
 
@@ -464,9 +734,9 @@ CR1197_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   theme_cowplot() +
   labs(title = "CR1197 Cetuximab - Palbociclib Bliss Synergy Comparison", subtitle = "invivoSyn - SynergyLMM")
 
-## Fig. 3c ----
+## Fig. 5c ----
 
-GABA <- read.csv("data/Fig3/GABA_antiPD1_long.csv")
+GABA <- read.csv("data/Fig5/GABA_antiPD1_long.csv")
 
 GABA$Day <- sqrt(GABA$Day-7)
 
@@ -483,7 +753,7 @@ plot_lmmModel(GABA_lmm, trt_control = "Ctrl", drug_a = "GABA", drug_b = "Anti-PD
   scale_x_continuous(breaks = unique(GABA_lmm$dt1$Time), labels = unique(GABA_lmm$dt1$Time)^2) +
   theme(strip.text = element_text(size = 18))
 
-## Fig. 3d ----
+## Fig. 5d ----
 
 # Synergy calculation
 
@@ -494,7 +764,7 @@ hsa$Synergy$Time <- hsa$Synergy$Time^2
 
 ## invivoSyn
 
-GABA <- read.csv("data/Fig3/GABA_antiPD1_long.csv")
+GABA <- read.csv("data/Fig5/GABA_antiPD1_long.csv")
 
 # Assign groups
 colnames(GABA) <- c("Mouse", "Treatment", "Day", "TV", "Cell")
@@ -538,13 +808,13 @@ for (t in unique(GABA$Day)) {
 
 # The simulations can take a while to run. Load the results running the following line of code:
 
-GABA_invivoSyn_hsa <- read.csv("data/Fig3/GABA_invivoSyn_hsa_byT.csv")
+GABA_invivoSyn_hsa <- read.csv("data/Fig5/GABA_invivoSyn_hsa_byT.csv")
 
 ## CombPDX
 
 # The analysis were done using the web-app: 
 # Load the results by running:
-load("data/Fig3/4T1_GABA_aPD1_CombPDX.Rdata")
+load("data/Fig5/4T1_GABA_aPD1_CombPDX.Rdata")
 GABA_combpdx_hsa <- hsa_effect
 
 
@@ -590,9 +860,9 @@ GABA_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   theme_cowplot() +
   labs(title = "4T1 GABA - Anti PD-1 hsa Synergy Comparison", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
-## Fig. 3e ----
+## Fig. 5e ----
 
-SW837 <- read.xlsx("data/Fig3/SW837_long.xlsx")
+SW837 <- read.xlsx("data/Fig5/SW837_long.xlsx")
 
 # Fit model
 SW837_lmm <- lmmModel(data = SW837, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
@@ -605,7 +875,7 @@ plot_lmmModel(SW837_lmm, trt_control = "Ctrl", drug_a = "Rabusertib", drug_b = "
   labs(title = "SW837") + ylab("log (Relative Tumor Volume)") +
   theme(strip.text = element_text(size = 18))
 
-## Fig. 3f ----
+## Fig. 5f ----
 
 # Calculate Synergy
 
@@ -615,7 +885,7 @@ plot_lmmModel(SW837_lmm, trt_control = "Ctrl", drug_a = "Rabusertib", drug_b = "
 
 ## invivoSyn
 
-SW837 <- read.xlsx("data/Fig3/SW837_long.xlsx")
+SW837 <- read.xlsx("data/Fig5/SW837_long.xlsx")
 
 SW837$Day <- as.numeric(SW837$Day)
 SW837$Day <- SW837$Day + 1
@@ -655,14 +925,14 @@ for (t in unique(SW837$Day)) {
   }
 
 # The simulations can take a while to run. Load the results running the following line of code:
-SW837_invivoSyn_bliss <- read.csv("data/Fig3/SW837_invivoSyn_bliss_byT.csv")
+SW837_invivoSyn_bliss <- read.csv("data/Fig5/SW837_invivoSyn_bliss_byT.csv")
 
 ## CombPDX
 
 # The analysis were done using the web-app: 
 # Load the results by running:
 
-load("data/Fig3/SW837_CombPDX.Rdata")
+load("data/Fig5/SW837_CombPDX.Rdata")
 SW837_combpdx_bi <- bi_effect
 
 # Generate plots
@@ -707,11 +977,11 @@ SW837_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   theme_cowplot() +
   labs(title = "SW837 Rabusertib - Irinotecan Bliss Synergy Comparison", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
-# Supplementary Figure 4 ----
+# Supplementary Figure 7 ----
 
-## Supplementary Fig. 4a ----
+## Supplementary Fig. 7a ----
 
-LS1034 <- read.xlsx("data/Supp_Fig4/LS_1034_long.xlsx")
+LS1034 <- read.xlsx("data/Supp_Fig7/LS_1034_long.xlsx")
 
 LS1034_lmm <- lmmModel(data = LS1034, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
                        trt_control = "Ctrl", drug_a = "Rabusertib", drug_b = "Irinotecan", combination = "Irinotecan_Rabusertib",
@@ -723,7 +993,7 @@ plot_lmmModel(LS1034_lmm, trt_control = "Ctrl", drug_a = "Rabusertib", drug_b = 
   labs(title = "LS-1034 Rabusertib - Irinotecan") + ylab("log (Relative Tumor Volume)") +
   theme(strip.text = element_text(size = 18))
 
-## Supplementary Fig. 4b ----
+## Supplementary Fig. 7b ----
 
 # Synergy Calculation
 
@@ -733,7 +1003,7 @@ plot_lmmModel(LS1034_lmm, trt_control = "Ctrl", drug_a = "Rabusertib", drug_b = 
 
 ## invivoSyn
 
-LS1034 <- read.xlsx("data/Supp_Fig4/LS_1034_long.xlsx")
+LS1034 <- read.xlsx("data/Supp_Fig7/LS_1034_long.xlsx")
 
 LS1034$Day <- as.numeric(LS1034$Day)
 LS1034$Day <- LS1034$Day + 1
@@ -776,7 +1046,7 @@ for (t in unique(LS1034$Day)) {
 
 # The simulations can take a while to run. Load the results running the following line of code:
 
-LS1034_invivoSyn_bliss <- read.csv("data/Supp_Fig4//LS1034_invivoSyn_bliss_byT.csv")
+LS1034_invivoSyn_bliss <- read.csv("data/Supp_Fig7/LS1034_invivoSyn_bliss_byT.csv")
 
 
 ## CombPDX
@@ -784,7 +1054,7 @@ LS1034_invivoSyn_bliss <- read.csv("data/Supp_Fig4//LS1034_invivoSyn_bliss_byT.c
 # The analysis were done using the web-app: 
 # Load the results by running:
 
-load("data/Supp_Fig4/LS1034_CombPDX.Rdata")
+load("data/Supp_Fig7/LS1034_CombPDX.Rdata")
 LS1034_combpdx_bi <- bi_effect
 
 # Generate plots
@@ -830,9 +1100,9 @@ LS1034_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   theme_cowplot() +
   labs(title = "LS1034 Rabusertib - Irinotecan Bliss Synergy Comparison", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
-## Supplementary Fig. 4c ----
+## Supplementary Fig. 7c ----
 
-SNU81 <- read.xlsx("data/Supp_Fig4/SNU81_long.xlsx")
+SNU81 <- read.xlsx("data/Supp_Fig7/SNU81_long.xlsx")
 
 # Fit model
 SNU81_lmm <- lmmModel(data = SNU81, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
@@ -846,7 +1116,7 @@ plot_lmmModel(SNU81_lmm, trt_control = "Ctrl", drug_a = "Rabusertib", drug_b = "
   labs(title = "SNU-81 Rabusertib - Irinotecan") + ylab("log (Relative Tumor Volume)") +
   theme(strip.text = element_text(size = 18))
 
-## Supplementary Fig. 4d ----
+## Supplementary Fig. 7d ----
 
 # Synergy Calculation
 
@@ -856,7 +1126,7 @@ plot_lmmModel(SNU81_lmm, trt_control = "Ctrl", drug_a = "Rabusertib", drug_b = "
 
 ## invivoSyn
 
-SNU81 <- read.xlsx("data/Supp_Fig4/SNU81_long.xlsx")
+SNU81 <- read.xlsx("data/Supp_Fig7/SNU81_long.xlsx")
 
 SNU81$Day <- as.numeric(SNU81$Day)
 SNU81$Day <- SNU81$Day + 1
@@ -897,14 +1167,14 @@ for (t in unique(SNU81$Day)) {
 
 # The simulations can take a while to run. Load the results running the following line of code:
 
-SNU81_invivoSyn_bliss <- read.csv("data/Supp_Fig4/SNU81_invivoSyn_bliss_byT.csv")
+SNU81_invivoSyn_bliss <- read.csv("data/Supp_Fig7/SNU81_invivoSyn_bliss_byT.csv")
 
 ## CombPDX
 
 # The analysis were done using the web-app: 
 # Load the results by running:
 
-load("data/Supp_Fig4/SNU81_CombPDX.Rdata")
+load("data/Supp_Fig7/SNU81_CombPDX.Rdata")
 SNU81_combpdx_bi <- bi_effect
 
 # Generate plots
@@ -950,63 +1220,63 @@ SNU81_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   theme_cowplot() +
   labs(title = "SNU81 Rabusertib - Irinotecan Bliss Synergy Comparison", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
-# Supplementary Figure 5 ----
+# Supplementary Figure 8 ----
 
-## Supplementary Fig. 5a ----
+## Supplementary Fig. 8a ----
 
 ranefDiagnostics(CR1197_lmm)$Plots[1]
 residDiagnostics(CR1197_lmm)$Plots[1]
 residDiagnostics(CR1197_lmm)$Plots[4]
 
-## Supplementary Fig. 5b ----
+## Supplementary Fig. 8b ----
 
 ranefDiagnostics(GABA_lmm)$Plots[1]
 residDiagnostics(GABA_lmm)$Plots[1]
 residDiagnostics(GABA_lmm)$Plots[4]
 
-## Supplementary Fig. 5c ----
+## Supplementary Fig. 8c ----
 
 ranefDiagnostics(SW837_lmm)$Plots[1]
 residDiagnostics(SW837_lmm)$Plots[1]
 residDiagnostics(SW837_lmm)$Plots[4]
 
-## Supplementary Fig. 5d ----
+## Supplementary Fig. 8d ----
 
 ranefDiagnostics(LS1034_lmm)$Plots[1]
 residDiagnostics(LS1034_lmm)$Plots[1]
 residDiagnostics(LS1034_lmm)$Plots[4]
 
-## Supplementary Fig. 5e ----
+## Supplementary Fig. 8e ----
 
 ranefDiagnostics(SNU81_lmm)$Plots[1]
 residDiagnostics(SNU81_lmm)$Plots[1]
 residDiagnostics(SNU81_lmm)$Plots[4]
 
-# Supplementary Figure 6 ----
+# Supplementary Figure 9 ----
 
-## Supplementary Fig. 6a ----
+## Supplementary Fig. 9a ----
 
 ObsvsPred(CR1197_lmm, 6, 7)
 
-## Supplementary Fig. 6b ----
+## Supplementary Fig. 9b ----
 
 ObsvsPred(GABA_lmm, 6, 7)
 
-## Supplementary Fig. 6c ----
+## Supplementary Fig. 9c ----
 
 ObsvsPred(SW837_lmm, 5, 5)
 
-## Supplementary Fig. 6d ----
+## Supplementary Fig. 9d ----
 
 ObsvsPred(LS1034_lmm, 6, 7)
 
-## Supplementary Fig. 6e ----
+## Supplementary Fig. 9e ----
 
 ObsvsPred(SNU81_lmm, 5, 6)
 
-# Supplementary Figure 7 ----
+# Supplementary Figure 10 ----
 
-## Supplementary Fig. 7a ----
+## Supplementary Fig. 10a ----
 
 # Create simulated tumor growths
 
@@ -1039,7 +1309,7 @@ for (i in 1:1000) {
 
 # The simulations can take some time to run. The results can be loaded as:
 
-simulatedSyn <- read.csv("data/Supp_Fig7/SimulatedSyn1000.csv", row.names = 1)
+simulatedSyn <- read.csv("data/Supp_Fig10/SimulatedSyn1000.csv", row.names = 1)
 
 # Generate plot of summary results
 
@@ -1075,7 +1345,7 @@ simSS %>% ggplot(aes(x = Time, y = `median(Estimate)`)) +
   scale_x_continuous(breaks = unique(simSS$Time)) +
   labs(title = "Bliss Sinergy for Simulated Data")
 
-## Supplementary Fig. 7b ----
+## Supplementary Fig. 10b ----
 
 simulatedAdd <- data.frame(Estimate = numeric(0), lwr = numeric(0), upr = numeric(0), pval = numeric(0), Time = numeric(0), Simulation = numeric(0))
 
@@ -1107,7 +1377,7 @@ for (i in 1:1000) {
 
 # The simulations can take some time to run. The results can be loaded as:
 
-simulatedAdd <- read.csv("data/Supp_Fig7/SimulatedAdd1000.csv", row.names = 1)
+simulatedAdd <- read.csv("data/Supp_Fig10/SimulatedAdd1000.csv", row.names = 1)
 
 lwrSS <- simulatedAdd %>% filter(Metric == "SS") %>% group_by(Time) %>% summarise(median(lwr))
 uprSS <- simulatedAdd %>% filter(Metric == "SS") %>% group_by(Time) %>% summarise(median(upr))
@@ -1140,7 +1410,7 @@ simSS %>% ggplot(aes(x = Time, y = `median(Estimate)`)) +
   scale_x_continuous(breaks = unique(simSS$Time)) +
   labs(title = "Bliss Sinergy (Additivity) for Simulated Data")
 
-## Supplementary Fig. 3c ----
+## Supplementary Fig. 10c ----
 
 # Generate data
 set.seed(123)
@@ -1160,7 +1430,7 @@ plot_lmmModel(lmm1, trt_control = "Control", drug_a = "DrugA", drug_b = "DrugB",
   labs(title = "Simulated Data - Synergistic Effect") +
   theme(strip.text = element_text(size = 18))
 
-## Supplementary Fig. 7d ----
+## Supplementary Fig. 10d ----
 
 # Calculate Synergy
 
@@ -1211,14 +1481,14 @@ for (t in unique(grwth_data_1$Day)) {
 
 # The simulations can take a while to run. Load the results running the following line of code:
 
-SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig7/SimData1_invivoSyn_bliss_byT.csv", row.names = 1)
+SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig10/SimData1_invivoSyn_bliss_byT.csv", row.names = 1)
 
 
 ## CombPDX
 
 # The analysis were done using the web-app: 
 # Load the results by running:
-load("data/Supp_Fig7/SimData1_CombPDX.Rdata")
+load("data/Supp_Fig10/SimData1_CombPDX.Rdata")
 SimData1_combpdx_bi <- bi_effect
 
 # Generate plots
@@ -1264,7 +1534,7 @@ SimData1_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   labs(title = "Simulated Data Bliss Synergy Comparison", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
 
-## Supplementary Fig. 7e ----
+## Supplementary Fig. 10e ----
 
 # Generate data
 set.seed(123)
@@ -1293,7 +1563,7 @@ plot_lmmModel(lmm1, trt_control = "Control", drug_a = "DrugA", drug_b = "DrugB",
   labs(title = "Simulated Data - Synergistic Effect") +
   theme(strip.text = element_text(size = 18))
 
-## Supplementary Fig. 7f ----
+## Supplementary Fig. 10f ----
 
 # Calculate Synergy
 
@@ -1341,14 +1611,14 @@ for (t in unique(grwth_data_1$Day)) {
 
 # The simulations can take a while to run. Load the results running the following line of code:
 
-SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig7/SimData1_invivoSyn_bliss_byT_outlier.csv", row.names = 1)
+SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig10/SimData1_invivoSyn_bliss_byT_outlier.csv", row.names = 1)
 
 
 ## CombPDX
 
 # The analysis were done using the web-app: 
 # Load the results by running:
-load("data/Supp_Fig7/SimData1_CombPDX_outlier.Rdata")
+load("data/Supp_Fig10/SimData1_CombPDX_outlier.Rdata")
 SimData1_combpdx_bi <- bi_effect
 
 # Generate plots
@@ -1393,7 +1663,7 @@ SimData1_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   theme_cowplot() +
   labs(title = "Simulated Data Bliss Synergy Comparison - Outlier", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
-## Supplementary Fig. 7g ----
+## Supplementary Fig. 10g ----
 
 # Generate data
 set.seed(123)
@@ -1414,7 +1684,7 @@ plot_lmmModel(lmm1, trt_control = "Control", drug_a = "DrugA", drug_b = "DrugB",
   labs(title = "Simulated Data - Additive Effect") +
   theme(strip.text = element_text(size = 18))
 
-## Supplementary Fig. 7h ----
+## Supplementary Fig. 10h ----
 
 # Calculate Synergy
 
@@ -1463,14 +1733,14 @@ for (t in unique(grwth_data_1$Day)) {
 
 # The simulations can take a while to run. Load the results running the following line of code:
 
-SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig7/SimData1_invivoSyn_bliss_byTAdditive.csv", row.names = 1)
+SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig10/SimData1_invivoSyn_bliss_byTAdditive.csv", row.names = 1)
 
 
 ## CombPDX
 
 # The analysis were done using the web-app: 
 # Load the results by running:
-load("data/Supp_Fig7/SimData1_CombPDX_Additive.Rdata")
+load("data/Supp_Fig10/SimData1_CombPDX_Additive.Rdata")
 SimData1_combpdx_bi <- bi_effect
 
 # Generate plots
@@ -1515,7 +1785,7 @@ SimData1_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   theme_cowplot() +
   labs(title = "Simulated Data Bliss Synergy Comparison - Additive Effect", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
-## Supplementary Fig. 7i ----
+## Supplementary Fig. 10i ----
 
 # Generate data
 set.seed(123)
@@ -1544,7 +1814,7 @@ plot_lmmModel(lmm1, trt_control = "Control", drug_a = "DrugA", drug_b = "DrugB",
   labs(title = "Simulated Data - Additive Effect") +
   theme(strip.text = element_text(size = 18))
 
-## Supplementary Fig. 7j ----
+## Supplementary Fig. 10j ----
 
 # Calculate Synergy
 
@@ -1593,14 +1863,14 @@ for (t in unique(grwth_data_1$Day)) {
 
 # The simulations can take a while to run. Load the results running the following line of code:
 
-SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig7/SimData1_invivoSyn_bliss_byTAdditive_outlier.csv", row.names = 1)
+SimData1_invivoSyn_bliss <- read.csv("data/Supp_Fig10/SimData1_invivoSyn_bliss_byTAdditive_outlier.csv", row.names = 1)
 
 
 ## CombPDX
 
 # The analysis were done using the web-app: 
 # Load the results by running:
-load("data/Supp_Fig7/SimData1_CombPDX_Additive_outlier.Rdata")
+load("data/Supp_Fig10/SimData1_CombPDX_Additive_outlier.Rdata")
 SimData1_combpdx_bi <- bi_effect
 
 # Generate plots
@@ -1646,276 +1916,6 @@ SimData1_syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
   labs(title = "Simulated Data Bliss Synergy Comparison - Additive Effect - Outlier", subtitle = "CombPDX - invivoSyn - SynergyLMM") #+ ggbreak::scale_y_break(breaks = c(10,100), scales = 0.25)
 
 
-# Figure 4 ----
-
-## Fig. 4b ----
-
-MAS98.06 <- read.csv("data/Fig4/MAS98_06.csv")
-colnames(MAS98.06) <- c("Cell", "SampleID","Treatment", "TV","Time", "Figure")
-MAS98.06 <- getRTV(MAS98.06, time_start = 0)
-
-MAS98.06$Treatment <- factor(MAS98.06$Treatment, levels = c("Ctrl", "Her", "EGF", "Fulv", "Trast", "Her_Fulv", "EGF_Fulv","Fulv_Trast","Her_Trast"))
-
-hline <- data.frame(yintercept = 0)
-
-MAS98.06 %>% ggplot(aes(x = Time, y = logRTV, color = Treatment)) +
-  geom_line(aes(group = SampleID), alpha = 0.33) + geom_point(aes(group = SampleID, shape = Treatment, fill = Treatment)) +
-  ylab("Log (RTV)") + 
-  xlab("Time since start of treatment") + 
-  scale_x_continuous(breaks = c(0,7,14,21,28)) + 
-  cowplot::theme_cowplot() + facet_wrap(~Treatment) +
-  labs(title = "MAS98.06") +
-  geom_hline(data = hline, aes(yintercept = yintercept), linetype = "dashed") +
-  scale_color_manual(values = c("#3c3c3b", "#00a49c", "#fc8d62","#d50c52","#8c510a","#601580","#e78ac3", "#01665e","#386cb0")) +
-  scale_fill_manual(values = c("#3c3c3b", "#00a49c", "#fc8d62","#d50c52","#8c510a","#601580","#e78ac3", "#01665e","#386cb0")) +
-  scale_shape_manual(values = c(21:25,21:24)) +
-  theme(strip.text = element_text(size = 18), legend.position = "top")
-
-## Fig. 4c ----
-
-MAS98.06_Her_Fulv <- read.xlsx("data/Fig4/MAS98.06_Her_Fulv.xlsx")
-MAS98.06_Her_Fulv$Mouse <- paste(MAS98.06_Her_Fulv$Treatment, " (",MAS98.06_Her_Fulv$Mouse,")", sep = "")
-MAS98.06_Her_Fulv <- MAS98.06_Her_Fulv[order(MAS98.06_Her_Fulv$Mouse),]
-
-MAS98.06_Her_Fulv_lmm <- lmmModel(data = MAS98.06_Her_Fulv, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
-                                  trt_control = "Ctrl", drug_a = "Fulv", drug_b = "Her", combination = "Her_Fulv", time_end = 28,
-                                  weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
-
-(Her_Fulv <- lmmSynergy(MAS98.06_Her_Fulv_lmm, robust = T, type = "CR2", min_time = 7, method = "HSA"))
-Her_Fulv <- Her_Fulv$Synergy
-Her_Fulv$Drug <- "Her_Fulv"
-
-MAS98.06_EGF_Fulv <- read.xlsx("data/Fig4/MAS98.06_EGF_Fulv.xlsx")
-MAS98.06_EGF_Fulv$Mouse <- paste(MAS98.06_EGF_Fulv$Treatment, " (",MAS98.06_EGF_Fulv$Mouse,")", sep = "")
-MAS98.06_EGF_Fulv <- MAS98.06_EGF_Fulv[order(MAS98.06_EGF_Fulv$Mouse),]
-
-
-MAS98.06_EGF_Fulv_lmm <- lmmModel(data = MAS98.06_EGF_Fulv, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
-                                  trt_control = "Ctrl", drug_a = "Fulv", drug_b = "EGF", combination = "EGF_Fulv", time_end = 28,
-                                  weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
-
-(EGF_Fulv <- lmmSynergy(MAS98.06_EGF_Fulv_lmm, robust = T, type = "CR2", min_time = 7, method = "HSA"))
-EGF_Fulv <- EGF_Fulv$Synergy
-
-EGF_Fulv$Drug <- "EGF_Fulv"
-
-MAS98.06_Fulv_Trast <- read.xlsx("data/Fig4/MAS98.06_Fulv_Trast.xlsx")
-MAS98.06_Fulv_Trast$Mouse <- paste(MAS98.06_Fulv_Trast$Treatment, " (",MAS98.06_Fulv_Trast$Mouse,")", sep = "")
-MAS98.06_Fulv_Trast <- MAS98.06_Fulv_Trast[order(MAS98.06_Fulv_Trast$Mouse),]
-
-MAS98.06_Fulv_Trast_lmm <- lmmModel(data = MAS98.06_Fulv_Trast, sample_id = "Mouse", time = "Day", treatment = "Treatment", tumor_vol = "TV",
-                                    trt_control = "Ctrl", drug_a = "Fulv", drug_b = "Trast", combination = "Fulv_Trast", time_end = 28,
-                                    weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
-
-(Fulv_Trast <- lmmSynergy(MAS98.06_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "HSA"))
-Fulv_Trast <- Fulv_Trast$Synergy
-Fulv_Trast$Drug <- "Fulv_Trast"
-
-MAS98.06_Her_Trast <- read.xlsx("data/Fig4/MAS98.06_Her_Trast.xlsx")
-MAS98.06_Her_Trast$Sample <- paste(MAS98.06_Her_Trast$Treatment, " (",MAS98.06_Her_Trast$Sample,")", sep = "")
-MAS98.06_Her_Trast <- MAS98.06_Her_Trast[order(MAS98.06_Her_Trast$Sample),]
-
-MAS98.06_Her_Trast_lmm <- lmmModel(data = MAS98.06_Her_Trast, sample_id = "Sample", time = "Days", treatment = "Treatment", tumor_vol = "Total_vol",
-                                   trt_control = "Ctrl", drug_a = "Her", drug_b = "Trast", combination = "Her_Trast", time_start = 0, time_end = 28,
-                                   weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
-
-(Her_Trast <- lmmSynergy(MAS98.06_Her_Trast_lmm, robust = T, type = "CR2", min_time = 7, method = "HSA"))
-Her_Trast <- Her_Trast$Synergy
-Her_Trast$Drug <- "Her_Trast"
-
-HSA_Syn <- rbind(Her_Fulv, EGF_Fulv, Fulv_Trast, Her_Trast)
-
-HSA_Syn <- HSA_Syn[,-1]
-
-HSA_Syn <- HSA_Syn %>% filter(Time == 28)
-
-HSA_Syn$Drug <- factor(HSA_Syn$Drug, levels = unique(HSA_Syn$Drug))
-
-HSA_CI <- HSA_Syn %>% filter(Metric == "CI")
-HSA_SS <- HSA_Syn %>% filter(Metric == "SS")
-
-
-CI <- HSA_CI %>% ggplot(aes(x = Drug, y = Estimate, group = Drug)) +
-  geom_segment(aes(x= Drug, y = lwr, yend = upr), color = "gray60", lwd = 1, 
-               arrow = arrow(angle = 90, length = unit(0.01, "npc"),ends = "both")) +
-  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
-  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
-  geom_hline(yintercept = 1, lty = "dashed") +
-  xlab("Drugs") +
-  ylab("Combination Index") + 
-  theme_cowplot() +
-  labs(title = "Combination Index")
-
-
-SS <- HSA_SS %>% ggplot(aes(x = Drug, y = Estimate, group = Drug)) +
-  geom_segment(aes(x= Drug, y = lwr, yend = upr), color = "gray60", lwd = 1, 
-               arrow = arrow(angle = 90, length = unit(0.01, "npc"),ends = "both")) +
-  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
-  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
-  geom_hline(yintercept = 0, lty = "dashed") +
-  xlab("Drugs") +
-  ylab("Synergy Score") + 
-  theme_cowplot() +
-  labs(title = "Synergy Score")
-
-cowplot::plot_grid(CI, SS)
-
-# Supplementary Figure 8 ----
-
-## Supplementary Fig. 8a ----
-
-ranefDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_lmm)$Plots[4]
-
-## Supplementary Fig. 8b ----
-
-ranefDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[1]
-residDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[1]
-residDiagnostics(MAS98.06_EGF_Fulv_lmm)$Plots[4]
-
-## Supplementary Fig. 8c ----
-
-ranefDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Fulv_Trast_lmm)$Plots[4]
-
-## Supplementary Fig. 8d ----
-
-ranefDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Trast_lmm)$Plots[4]
-
-
-# Supplementary Figure 9 ----
-
-## Supplementary Fig. 9a ----
-ObsvsPred(MAS98.06_Her_Fulv_lmm, 5, 5)
-
-## Supplementary Fig. 9b ----
-ObsvsPred(MAS98.06_EGF_Fulv_lmm, 4, 5)
-
-## Supplementary Fig. 9c ----
-ObsvsPred(MAS98.06_Fulv_Trast_lmm, 4, 5)
-
-## Supplementary Fig. 9d ----
-ObsvsPred(MAS98.06_Her_Trast_lmm, 4, 6)
-
-# Figure 5 ----
-
-## Fig. 5a ----
-
-MAS98.06_Her_Fulv_Trast <- read.xlsx("data/Fig5/MAS98.06_Her_Fulv_Trast.xlsx")
-MAS98.06_Her_Fulv_Trast$Sample <- paste(MAS98.06_Her_Fulv_Trast$Treatment, " (",MAS98.06_Her_Fulv_Trast$Sample,")", sep = "")
-MAS98.06_Her_Fulv_Trast <- MAS98.06_Her_Fulv_Trast[order(MAS98.06_Her_Fulv_Trast$Sample),]
-
-# Fit Model
-MAS98.06_Her_Fulv_Trast_lmm <- lmmModel(data = MAS98.06_Her_Fulv_Trast, sample_id = "Sample", time = "Days", treatment = "Treatment", tumor_vol = "Total_vol",
-                                        trt_control = "Ctrl", drug_a = "Her", drug_b = "Trast", drug_c = "Fulv", combination = "Her_Fulv_Trast", time_start = 0, time_end = 28,
-                                        weights = nlme::varIdent(form = ~1|SampleID), min_observations = 3) 
-
-trt_col <- c("#3c3c3b", "#00a49c", "#fc8d62","#d50c52","#8c510a","#601580","#e78ac3", "#01665e","#386cb0")
-
-plot_lmmModel(MAS98.06_Her_Fulv_Trast_lmm,   trt_control = "Ctrl", drug_a = "Her", drug_b = "Trast", drug_c = "Fulv", combination = "Her_Fulv_Trast") +
-  theme(legend.position = "top") +
-  labs(title = "MAS98.06 Heregulin - Fulvestrant - Trastuzumab") + scale_x_continuous(breaks = c(0,7,14,21,28)) +
-  ylab("log (Relative Tumor Volume)") +
-  scale_color_manual(values = c(trt_col[c(1,2,4,5)], "red3")) +
-  theme(strip.text = element_text(size = 18))
-
-## Fig. 5b ----
-
-(bliss <- lmmSynergy(MAS98.06_Her_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "Bliss"))
-
-(hsa <- lmmSynergy(MAS98.06_Her_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "HSA"))
-
-set.seed(123)
-(ra <- lmmSynergy(MAS98.06_Her_Fulv_Trast_lmm, robust = T, type = "CR2", min_time = 8, method = "RA", ra_nsim = 1000))
-
-syn <- rbind(bliss$Synergy, hsa$Synergy, ra$Synergy)
-
-syn <- syn %>% filter(Metric == "SS" & Time %in% c(8,12, 16, 20, 24, 28))
-
-syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
-  geom_segment(aes(x= Time, y = lwr, yend = upr), color = "gray60", lwd = 1, 
-               arrow = arrow(angle = 90, length = unit(0.02, "npc"),ends = "both")) +
-  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
-  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
-  geom_hline(yintercept = 0, lty = "dashed") +
-  xlab("Days after Treatment Initiation") +
-  ylab("Synergy Score") + 
-  theme_cowplot() +
-  labs(title = "Synergy Score") + facet_wrap(~Model) +
-  scale_x_continuous(breaks = c(8,12, 16, 20, 24, 28)) +
-  theme(strip.background = element_rect(fill = "cyan4"), strip.text = element_text(color = "white", face = "bold", size = 18))
-
-## Fig. 5c ----
-
-triple <- read.csv("data/Fig5/U87MG_Triple_long.csv")
-
-triple$Day <- sqrt(triple$Day)
-
-# Fit model
-triple_lmm <- lmmModel(data = triple, sample_id = "MOUSE", time = "Day", treatment = "Treatment", tumor_vol = "RLU",
-                       trt_control = "None", drug_a = "AZD2014", drug_b = "Tagrisso", drug_c = "DOC",combination = "Triple",
-                       weights = nlme::varComb(nlme::varIdent(form = ~1|SampleID), varIdent(form = ~1|Time)))
-
-plot_lmmModel(triple_lmm, trt_control = "None", drug_a = "AZD2014", drug_b = "Tagrisso", drug_c = "DOC",combination = "Triple") +
-  theme(legend.position = "top") +
-  labs(title = "U87-MG-FM Tagrisso-AZD2014-DOC") +
-  scale_x_continuous(breaks = unique(triple_lmm$dt1$Time), labels = unique(triple_lmm$dt1$Time)^2) + ylab("log (RLU)") +
-  theme(strip.text = element_text(size = 18))
-
-## Fig. 5d ----
-
-(bliss <- lmmSynergy(triple_lmm, robust = T, type = "CR2", min_time = 3, method = "Bliss"))
-bliss$Synergy$Time <- bliss$Synergy$Time^2
-
-(hsa <- lmmSynergy(triple_lmm, robust = T, type = "CR2", min_time = 3, method = "HSA"))
-hsa$Synergy$Time <- hsa$Synergy$Time^2
-
-set.seed(123)
-(ra <- lmmSynergy(triple_lmm, robust = T, type = "CR2", min_time = 3, method = "RA", ra_nsim = 1000))
-ra$Synergy$Time <- ra$Synergy$Time^2
-
-syn <- rbind(bliss$Synergy, hsa$Synergy, ra$Synergy)
-
-syn <- syn %>% filter(Metric == "SS")
-
-syn %>% ggplot(aes(x = Time, y = Estimate, group = Model)) +
-  geom_segment(aes(x= Time, y = lwr, yend = upr), color = "gray60", lwd = 1, 
-               arrow = arrow(angle = 90, length = unit(0.02, "npc"),ends = "both")) +
-  geom_point(aes(fill = -log10(pval)), size = 5, color = "gray65", shape = 23) +
-  scale_fill_gradient2(name = "-log10\np-value", low = "darkorchid4",mid = "gray90", high = "darkcyan",midpoint = 1.3) +
-  geom_hline(yintercept = 0, lty = "dashed") +
-  xlab("Days after Treatment Initiation") +
-  ylab("Synergy Score") + 
-  theme_cowplot() +
-  labs(title = "Synergy Score") + facet_wrap(~Model) +
-  scale_x_continuous(breaks = unique(syn$Time)) +
-  theme(strip.background = element_rect(fill = "cyan4"), strip.text = element_text(color = "white", face = "bold", size = 18))
-
-# Supplementary Figure 10 ----
-
-## Supplementary Fig. 10a ----
-
-ranefDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[1]
-residDiagnostics(MAS98.06_Her_Fulv_Trast_lmm)$Plots[4]
-
-## Supplementary Fig. 10b ----
-
-ObsvsPred(MAS98.06_Her_Fulv_Trast_lmm, 5, 5)
-
-## Supplementary Fig. 10c ----
-
-ranefDiagnostics(triple_lmm)$Plots[1]
-residDiagnostics(triple_lmm)$Plots[1]
-residDiagnostics(triple_lmm)$Plots[4]
-
-## Supplementary Fig. 10d ----
-
-ObsvsPred(triple_lmm, 6, 6)
 
 # Figure 6 ----
 
