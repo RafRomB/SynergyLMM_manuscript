@@ -1,6 +1,22 @@
 # Code to reproduce the results shown in 'SynergyLMM: A comprehensive statistical framework and interactive web-tool for designing and analyzing in vivo drug combination experiments'
 
-# Libraries ----
+# Install 'SynergyLMM'
+
+install.packages("SynergyLMM")
+
+# Install any other required package not installed:
+
+install.packages("tidyverse")
+install.packages("nlme")
+install.packages("cowplot")
+if (!require("devtools", quietly = TRUE))
+  install.packages("devtools")
+devtools::install_github("maobinchen/invivoSyn")
+install.packages("openxlsx")
+install.packages("ggbreak")
+
+
+# Load Libraries ----
 
 library(SynergyLMM)
 library(tidyverse)
