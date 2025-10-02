@@ -2,9 +2,7 @@
 
 # Install the last version of 'SynergyLMM'
 
-if (!require("pak", quietly = TRUE))
-  install.packages("pak")
-pak::pak("RafRomB/SynergyLMM")
+install.packages("SynergyLMM") # version 1.1.1
 
 # Install any other required package not installed:
 
@@ -800,7 +798,8 @@ triple$Day <- sqrt(triple$Day)
 # Fit model
 triple_lmm <- lmmModel(data = triple, sample_id = "MOUSE", time = "Day", treatment = "Treatment", tumor_vol = "RLU",
                        trt_control = "None", drug_a = "AZD2014", drug_b = "Tagrisso", drug_c = "DOC",combination = "Triple",
-                       weights = nlme::varComb(nlme::varIdent(form = ~1|SampleID), varIdent(form = ~1|Time)))
+                       weights = nlme::varComb(nlme::varIdent(form = ~1|SampleID), nlme::varIdent(form = ~1|Time)),
+                       control = nlme::lmeControl(maxIter = 1000, msMaxIter = 1000, niterEM = 1000, opt = "optim"))
 
 c <- plot_lmmModel(triple_lmm, trt_control = "None", drug_a = "AZD2014", drug_b = "Tagrisso", drug_c = "DOC",combination = "Triple") +
   theme(legend.position = "top") +
@@ -3611,7 +3610,7 @@ ObsvsPred(U87MG_lmm)
 
 ### Fig. 2c ----
 
-BV173Gluc <- read.delim("data/Fig2/BV_173.csv", sep = "\t")
+BV173Gluc <- read.csv("data/Fig2/BV_173.csv")
 BV173Gluc$Day <- sqrt(BV173Gluc$Day-7)
 
 BV173Gluc_lmm <- lmmModel(data = BV173Gluc, sample_id = "MOUSE", time = "Day", treatment = "Treatment", tumor_vol = "RLU",
